@@ -12,8 +12,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kalsdro.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kalsdro.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -30,8 +29,17 @@ async function run() {
     await client.connect();
     // Send a ping to confirm a successful connection
 
-    app.get("/ck", (req, res) => {
-      res.send("server ck");
+    const foodsCollection = client.db("foodShareHub").collection("foods");
+
+    app.get("/foods", async (req, res) => {
+      try{
+        const cursor = foodsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+      }
+      catch{
+        console.error();
+      }
     });
     await client.db("admin").command({ ping: 1 });
     console.log(
