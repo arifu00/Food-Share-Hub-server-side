@@ -73,7 +73,7 @@ async function run() {
       try {
         const cursor = foodRequestCollection.find();
         const result = await cursor.toArray();
-        res.send(result)
+        res.send(result);
       } catch (error) {
         console.log(error);
       }
@@ -88,6 +88,18 @@ async function run() {
         console.log(error);
       }
     });
+    app.delete("/requestFood/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log(id);
+        const query = { _id: new ObjectId(id) };
+        const result = await foodRequestCollection.deleteOne(query);
+        res.send(result)
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
