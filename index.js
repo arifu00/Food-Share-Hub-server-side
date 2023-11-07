@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -31,14 +31,37 @@ async function run() {
 
     const foodsCollection = client.db("foodShareHub").collection("foods");
 
+    // foods collection api
     app.get("/foods", async (req, res) => {
-      try{
+      try {
         const cursor = foodsCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch (error) {
+        console.error(error);
       }
-      catch{
-        console.error();
+    });
+
+    app.get("/food/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        // console.log(id);
+        const query = { _id: new ObjectId(id) };
+        const result = await foodsCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    app.post("/foods", async (req, res) => {
+      try {
+        const foods = req.body;
+        // console.log(foods);
+        const result = await foodsCollection.insertOne(foods);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
       }
     });
     await client.db("admin").command({ ping: 1 });
