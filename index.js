@@ -30,6 +30,9 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const foodsCollection = client.db("foodShareHub").collection("foods");
+    const foodRequestCollection = client
+      .db("foodShareHub")
+      .collection("foodRequest");
 
     // foods collection api
     app.get("/foods", async (req, res) => {
@@ -59,6 +62,27 @@ async function run() {
         const foods = req.body;
         // console.log(foods);
         const result = await foodsCollection.insertOne(foods);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // food request api
+    app.get("/requestFood", async (req, res) => {
+      try {
+        const cursor = foodRequestCollection.find();
+        const result = await cursor.toArray();
+        res.send(result)
+      } catch (error) {
+        console.log(error);
+      }
+    });
+    app.post("/requestFood", async (req, res) => {
+      try {
+        const requestFood = req.body;
+        // console.log(requestFood);
+        const result = await foodRequestCollection.insertOne(requestFood);
         res.send(result);
       } catch (error) {
         console.log(error);
