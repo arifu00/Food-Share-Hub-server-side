@@ -71,7 +71,12 @@ async function run() {
     // food request api
     app.get("/requestFood", async (req, res) => {
       try {
-        const cursor = foodRequestCollection.find();
+        console.log(req.query.email);
+        let query = {};
+        if (req.query?.email) {
+          query = { userEmail: req.query.email };
+        }
+        const cursor = foodRequestCollection.find(query);
         const result = await cursor.toArray();
         res.send(result);
       } catch (error) {
@@ -91,15 +96,75 @@ async function run() {
     app.delete("/requestFood/:id", async (req, res) => {
       try {
         const id = req.params.id;
-        console.log(id);
+        // console.log(id);
         const query = { _id: new ObjectId(id) };
         const result = await foodRequestCollection.deleteOne(query);
-        res.send(result)
+        res.send(result);
       } catch (error) {
         console.log(error);
       }
     });
 
+    // manage my food api
+    app.get("/manageMyFood", async (req, res) => {
+      try {
+        console.log(req.query.email);
+        let query = {};
+        if (req.query?.email) {
+          query = { donatorEmail: req.query.email };
+        }
+        const result = await foodsCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    app.delete("/manageMyFood/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        console.log(id);
+        const query = { _id: new ObjectId(id) };
+        const result = await foodsCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // update api 
+    app.get("/update/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await foodsCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+    app.patch("/update/:id", async (req, res) => {
+     try{
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedFood = req.body;
+      console.log(updatedFood);
+      const updateDoc = {
+        $set: {
+          foodName: updatedFood.foodName,
+          foodImage: updatedFood.foodImage,
+          pickupLocation: updatedFood.pickupLocation,
+          expiredDate: updatedFood.expiredDate,
+          additionalNotes: updatedFood.additionalNotes,
+        },
+      };
+      const result = await foodsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+     } 
+     catch(error){
+      console.log(error);
+     }
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
