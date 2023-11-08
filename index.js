@@ -74,7 +74,7 @@ async function run() {
         console.log(req.query.email);
         let query = {};
         if (req.query?.email) {
-          query = { userEmail: req.query.email };
+          query = { requesterEmail: req.query.email };
         }
         const cursor = foodRequestCollection.find(query);
         const result = await cursor.toArray();
@@ -119,6 +119,37 @@ async function run() {
         console.log(error);
       }
     });
+    app.get("/manageMyFoodDetail", async (req, res) => {
+      try {
+        console.log(req.query.email);
+        let query = {};
+        if (req.query?.email) {
+          query = { donatorEmail: req.query.email };
+        }
+        const result = await foodRequestCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    app.patch("/myFoodDetail/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateStatus = req.body;
+        console.log(updateStatus);
+        const updateDoc = {
+          $set: {
+            foodStatus: updateStatus.foodStatus,
+          },
+        };
+        const result = await foodRequestCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
 
     app.delete("/manageMyFood/:id", async (req, res) => {
       try {
@@ -132,7 +163,7 @@ async function run() {
       }
     });
 
-    // update api 
+    // update api
     app.get("/update/:id", async (req, res) => {
       try {
         const id = req.params.id;
@@ -144,26 +175,25 @@ async function run() {
       }
     });
     app.patch("/update/:id", async (req, res) => {
-     try{
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const updatedFood = req.body;
-      console.log(updatedFood);
-      const updateDoc = {
-        $set: {
-          foodName: updatedFood.foodName,
-          foodImage: updatedFood.foodImage,
-          pickupLocation: updatedFood.pickupLocation,
-          expiredDate: updatedFood.expiredDate,
-          additionalNotes: updatedFood.additionalNotes,
-        },
-      };
-      const result = await foodsCollection.updateOne(filter, updateDoc);
-      res.send(result);
-     } 
-     catch(error){
-      console.log(error);
-     }
+      try {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updatedFood = req.body;
+        console.log(updatedFood);
+        const updateDoc = {
+          $set: {
+            foodName: updatedFood.foodName,
+            foodImage: updatedFood.foodImage,
+            pickupLocation: updatedFood.pickupLocation,
+            expiredDate: updatedFood.expiredDate,
+            additionalNotes: updatedFood.additionalNotes,
+          },
+        };
+        const result = await foodsCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
     });
     await client.db("admin").command({ ping: 1 });
     console.log(
