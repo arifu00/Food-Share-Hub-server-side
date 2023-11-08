@@ -19,6 +19,24 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  // console.log("value of token ", token);
+  if (!token) {
+    return res.status(401).send({ message: "UnAuthorized" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ message: "UnAuthorized" });
+    }
+    console.log("value in code ", decoded);
+    req.user = decoded;
+    next();
+  });
+};
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.kalsdro.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -63,7 +81,7 @@ async function run() {
     app.get("/foods", async (req, res) => {
       try {
         const cursor = foodsCollection.find();
-        console.log("token", req.cookies.token);
+        // console.log("token", req.cookies.token);
         const result = await cursor.toArray();
         res.send(result);
       } catch (error) {
@@ -95,10 +113,13 @@ async function run() {
     });
 
     // food request api
-    app.get("/requestFood", async (req, res) => {
+    app.get("/requestFood", verifyToken, async (req, res) => {
       try {
         console.log(req.query.email);
-        console.log("token", req.cookies.token);
+        if (req.query.email !== req.user.email) {
+          return res.status(403).send({message: 'Forbidden Access'})
+        }
+        // console.log("token", req.cookies.token);
         let query = {};
         if (req.query?.email) {
           query = { requesterEmail: req.query.email };
@@ -110,7 +131,7 @@ async function run() {
         console.log(error);
       }
     });
-    app.post("/requestFood", async (req, res) => {
+    app.post("/requestFood", verifyToken, async (req, res) => {
       try {
         const requestFood = req.body;
         // console.log(requestFood);
@@ -120,7 +141,7 @@ async function run() {
         console.log(error);
       }
     });
-    app.delete("/requestFood/:id", async (req, res) => {
+    app.delete("/requestFood/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         // console.log(id);
@@ -133,9 +154,12 @@ async function run() {
     });
 
     // manage my food api
-    app.get("/manageMyFood", async (req, res) => {
+    app.get("/manageMyFood", verifyToken, async (req, res) => {
       try {
-        console.log(req.query.email);
+        // console.log(req.query.email);
+        if (req.query.email !== req.user.email) {
+          return res.status(403).send({message: 'Forbidden Access'})
+        }
         let query = {};
         if (req.query?.email) {
           query = { donatorEmail: req.query.email };
@@ -146,9 +170,10 @@ async function run() {
         console.log(error);
       }
     });
-    app.get("/manageMyFoodDetail", async (req, res) => {
+    app.get("/manageMyFoodDetail", verifyToken, async (req, res) => {
       try {
-        console.log(req.query.email);
+        // console.log(req.query.email);
+        console.log("user in the valid token ", req.user);
         let query = {};
         if (req.query?.email) {
           query = { donatorEmail: req.query.email };
@@ -160,7 +185,7 @@ async function run() {
       }
     });
 
-    app.patch("/myFoodDetail/:id", async (req, res) => {
+    app.patch("/myFoodDetail/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
@@ -178,7 +203,7 @@ async function run() {
       }
     });
 
-    app.delete("/manageMyFood/:id", async (req, res) => {
+    app.delete("/manageMyFood/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         console.log(id);
@@ -191,7 +216,7 @@ async function run() {
     });
 
     // update api
-    app.get("/update/:id", async (req, res) => {
+    app.get("/update/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
@@ -201,7 +226,7 @@ async function run() {
         console.log(error);
       }
     });
-    app.patch("/update/:id", async (req, res) => {
+    app.patch("/update/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         const filter = { _id: new ObjectId(id) };
